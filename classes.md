@@ -76,14 +76,16 @@ void exec()
 ```javascript
 
 var aw = require('AppWare');
-
 var app = new aw.Application();
-app.exec();
 
-var rect = new aw.Rect(0,0,100,100);
-var window = new aw.Form(rect);
+// create a window
+var window = new aw.Form(new aw.Rect(0,0,100,100));
 
+// add the window
 app.add(window);
+
+// start the app
+app.exec();
 
 ```
 
