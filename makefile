@@ -1,7 +1,8 @@
 cxx = g++
-cxxflags = -std=c++11
+cxxflags = -std=c++11 -Wall -pedantic
 objcflags = -lobjc -framework Cocoa
-src = ./src/test.cpp
+objcsrc = ./src/view.mm
+cxxsrc = ./src/test.cpp
 
 all:
-	$(cxx) $(cxxflags) $(objcflags) $(src)
+	$(cxx) $(cxxflags) $(objcflags) $(objcsrc) $(cxxsrc)

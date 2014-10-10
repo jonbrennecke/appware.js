@@ -1,6 +1,8 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
+const void start();
+
 // class Application
 // {
 // public:
