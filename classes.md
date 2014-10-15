@@ -5,9 +5,13 @@ aw::Object()
 ```
 
 __Exporter__
-.exportToCSS()
-.exportToJava()
-.exportToObjC()
+```C++
+CSSExport& exportToCSS()
+JavaExport& exportToJava()
+ObjCExport& exportToObjC()
+JavascriptExport& exportToJavascript()
+HTMLExport& exportToHTML()
+```
 
 
 
@@ -16,7 +20,7 @@ __Exporter__
 
 __Layout__
 base class for layouts
-inheriting classes:
+- inheriting classes:
 	- ContentPage
 	- MasterDetailPage
 	- NavigationPage
@@ -70,17 +74,18 @@ void exec()
 
 
 ```javascript
-// main.js
 
 var aw = require('AppWare');
-
 var app = new aw.Application();
-app.exec();
 
-var rect = new aw.Rect(0,0,100,100);
-var window = new aw.Form(rect);
+// create a window
+var window = new aw.Form(new aw.Rect(0,0,100,100));
 
+// add the window
 app.add(window);
+
+// start the app
+app.exec();
 
 ```
 
