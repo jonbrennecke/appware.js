@@ -3,20 +3,27 @@
 	#define BUILDING_NODE_EXTENSION
 #endif
 
-#include "test.h"
 
-// wrap native Objective C functions with C++, encapsulate C++
-// with V8 and pass to Javascript
+#include "common.h"
+
 
 /**
  * //////////////////////////////////////////////////////////////////////////////////////////
  *
- * Export
+ * Test!
  *
  * //////////////////////////////////////////////////////////////////////////////////////////
  */
 
-void init( v8::Handle<v8::Object> exports, v8::Handle<v8::Object> module );
+
+/**
+ *
+ * forward declaration of the init function
+ * 
+ * the function implementation is defined in 'framework-objc.mm'
+ *
+ */
+void init( v8::Handle<v8::Object> exports );
 
 // module building macro from node.h
 NODE_MODULE( test, init )

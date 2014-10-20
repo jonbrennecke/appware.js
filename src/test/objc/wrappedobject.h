@@ -1,60 +1,9 @@
-/**
- * /////////////////////////////////////////////////////////////////////////////////
- *
- *
- * Test to wrap an Objective C object in V8
- *
- *
- * /////////////////////////////////////////////////////////////////////////////////
- */
-
-
-#ifndef __TEST_OBJC_H_
-#define __TEST_OBJC_H_
-
-#import "test.h"
-#import <stdlib.h>
-#import <Cocoa/Cocoa.h>
+#ifndef __WRAPPED_OBJ_H__
+#define __WRAPPED_OBJ_H__
 
 
 
-/**
- * /////////////////////////////////////////////////////////////////////////////////
- *
- *
- * InvocationReturn
- * 
- * Objective C's 'id' type is used to represent Objective C objects, and values of 'id' 
- * type can't be cast to C++ objects.  For that reason, wrapped Objective C objects need to
- * return instances of 'InvocationReturn', which can then be cast back down to a 'Handle<Value>' 
- * for Javascript.
- *
- *
- * /////////////////////////////////////////////////////////////////////////////////
- */
-@interface InvocationReturn : NSObject {}
-@property v8::Handle<v8::Value> handle;
--(id)initWithHandle:(v8::Handle<v8::Value>)handle;
--(v8::Handle<v8::Value>)cast;
-@end
-
-
-
-
-/**
- * /////////////////////////////////////////////////////////////////////////////////
- *
- *
- * Test class
- *
- *
- * /////////////////////////////////////////////////////////////////////////////////
- */
-@interface Test : NSObject {}
--(InvocationReturn*)test:(const v8::Arguments&)args;
-@end
-
-
+#import "invocationreturn.h"
 
 
 
@@ -76,16 +25,17 @@ public:
 	typedef T* pointer;
 	typedef T& reference;
 
-	WrappedObject();
-
 	// functions for Javascript
+	WrappedObject(const v8::Arguments& args);
 	static v8::Persistent<v8::Function> constructor;
 	static v8::Handle<v8::Value> New(const v8::Arguments&);
 	static v8::Handle<v8::Value> Call(const v8::Arguments&);
 
 	// functions for C++
+	WrappedObject();
 	void exposeMethod(const char*,const SEL);
 	void exportClass(const char*,v8::Handle<v8::Object>);
+	static pointer unwrap(v8::Handle<v8::Object>);
 
 	// dereferencing WrappedObject yields the underlying object
 	pointer operator*() { return ptr_;  }
@@ -94,9 +44,6 @@ private:
 	v8::Local<v8::FunctionTemplate> tpl;
 	pointer ptr_;
 };
-
-
-
 
 
 
@@ -112,7 +59,24 @@ v8::Persistent<v8::Function> WrappedObject<T>::constructor;
 
 /**
  * 
- * Constructor
+ * Constructor (with arguments)
+ * 
+ * passes arguments through to the wrapped class (calling initWithArgs:)
+ *
+ */
+template<class T>
+WrappedObject<T>::WrappedObject(const v8::Arguments& args)
+{
+	tpl = v8::FunctionTemplate::New(WrappedObject::New);
+	tpl->InstanceTemplate()->SetInternalFieldCount(1);
+	ptr_ = [[T alloc] initWithArgs:args];
+}
+
+
+
+/**
+ * 
+ * Constructor (without arguments)
  * 
  */
 template<class T>
@@ -120,7 +84,7 @@ WrappedObject<T>::WrappedObject()
 {
 	tpl = v8::FunctionTemplate::New(WrappedObject::New);
 	tpl->InstanceTemplate()->SetInternalFieldCount(1);
-	ptr_ = [[value_type alloc] init];
+	ptr_ = [T alloc];
 }
 
 
@@ -141,6 +105,7 @@ void WrappedObject<T>::exposeMethod(const char* methodName, const SEL sel)
 }
 
 
+
 /**
  * 
  * Create a new instance (when the new operator or '()' is called)
@@ -154,15 +119,19 @@ v8::Handle<v8::Value> WrappedObject<T>::New(const v8::Arguments& args)
 	// Invoked as constructor: `new MyObject(...)`
 	if ( args.IsConstructCall() ) 
 	{
-		auto self = new WrappedObject<T>();
+		auto self = new WrappedObject<T>(args);
 		self->Wrap(args.This());
 		return scope.Close(args.This());
 	} 
 	else // Invoked as plain function `MyObject(...)`, turn into constructor call.
 	{
-		return scope.Close(WrappedObject::constructor->NewInstance());
+		// pass arguments
+		return scope.Close(v8::ThrowException(
+			v8::Exception::SyntaxError(
+				v8::String::New("Objects must be created with the 'new' keyword."))));
 	}
 }
+
 
 
 /**
@@ -194,5 +163,17 @@ v8::Handle<v8::Value> WrappedObject<T>::Call(const v8::Arguments& args)
 	return scope.Close([(InvocationReturn*)imp(ptr,sel,args) cast]);
 }
 
+
+
+/**
+ * 
+ * Unwrap an object of type T
+ * 
+ */
+template<class T>
+T*  WrappedObject<T>::unwrap(const v8::Handle<v8::Object> object)
+{
+	return **(WrappedObject<T>*)node::ObjectWrap::Unwrap<WrappedObject<T>>(object);
+}
 
 #endif

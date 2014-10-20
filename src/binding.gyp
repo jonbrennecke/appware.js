@@ -2,7 +2,7 @@
 	"targets" : [
 		{
 			"target_name" : "test",
-			"sources" : ["test/test-objc.mm", "test/test.cpp"],
+			"sources" : ["test/objc/framework.mm", "test/index.cpp"],
 			"conditions" : [
 				[ "OS == 'mac'", {
 					"xcode_settings": {
